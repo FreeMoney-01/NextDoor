@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Заработок на рекламе</title>
+    <style>
+        /* Общие стили */
+        body {
+            font-family: 'Arial', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        header {
+            background: linear-gradient(135deg, #4b6cb7, #182848);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        .container {
+            display: none;
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            margin-bottom: 20px;
+        }
+        #home-container {
+            display: block;
+        }
+        button {
+            background: linear-gradient(135deg, #4b6cb7, #182848);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            cursor: pointer;
+            border-radius: 8px;
+            font-size: 16px;
+            margin: 8px;
+            transition: all 0.3s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+        button:disabled {
+            background: #cccccc;
+            transform: none;
+            box-shadow: none;
+        }
+        .balance {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin: 15px 0;
+            text-align: center;
+        }
+        .ad-container {
+            border: 2px dashed #4b6cb7;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            background-color: #f0f5ff;
+        }
+        .progress-bar {
+            height: 10px;
+            background: #e0e0e0;
+            border-radius: 5px;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+        .progress {
+            height: 100%;
+            background: linear-gradient(90deg, #4b6cb7, #182848);
+            width: 0%;
+            transition: width 0.3s;
+        }
+        #ad-display {
+            min-height: 250px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+        .ad-label {
+            font-size: 12px;
+            color: #666;
+            text-align: center;
+            margin-top: 10px;
+        }
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+        }
+        .stat-item {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            flex: 1;
+            margin: 0 10px;
+        }
+        .ad-history {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 20px;
+            border-top: 1px solid #eee;
+            padding-top: 10px;
+        }
+        .ad-item {
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+        }
+        /* Стили для формы вывода */
+        #payment-form {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 8px;
+        }
+        #payment-form input, #payment-form select {
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 100%;
+        }
+    </style>
+    <!-- VK Ads Script -->
+    <script src="https://vk.com/js/api/openapi.js?169" async></script>
+</head>
+<body>
+    <!-- Главная страница -->
+    <div id="home-container" class="container">
+        <h2>Добро пожаловать!</h2>
+        <p>Зарабатывайте деньги, просматривая рекламу от VK Ads</p>
+        
+        <div class="balance">
+            Ваш баланс: <span id="home-balance">0 ₽</span>
+        </div>
+        
+        <div class="stats">
+            <div class="stat-item">
+                <div>🕒 Сегодня</div>
+                <div><strong id="today-earned">0 ₽</strong></div>
+            </div>
+            <div class="stat-item">
+                <div>📅 Всего</div>
+                <div><strong id="total-earned">0 ₽</strong></div>
+            </div>
+        </div>
+        
+        <button onclick="showContainer('ads-container')">Смотреть рекламу</button>
+        <button onclick="showContainer('profile-container')">Мой профиль</button>
+        
+        <!-- Блок VK Ads -->
+        <div class="ad-container">
+            <div id="vk_ad_main"></div>
+            <div class="ad-label">Реклама помогает нам платить вам</div>
+        </div>
+    </div>
+
+    <!-- Страница просмотра рекламы -->
+    <div id="ads-container" class="container">
+        <h2>Просмотр рекламы</h2>
+        <div class="balance">
+            Доступно: <span id="ads-balance">0 ₽</span>
+        </div>
+        
+        <div class="ad-container">
+            <div id="ad-display">
+                <!-- Здесь будет VK Video Ads -->
+                <div id="vk_video_ad"></div>
+            </div>
+            <div class="progress-bar">
+                <div class="progress" id="progress-bar"></div>
+            </div>
+            <button id="watch-ad-btn">Начать просмотр (10 сек)</button>
+            <p id="reward-message" style="text-align: center; color: green;"></p>
+        </div>
+        
+        <div class="ad-history" id="ad-history">
+            <h4>История просмотров:</h4>
+            <!-- Сюда будут добавляться просмотренные рекламы -->
+        </div>
+        
+        <button onclick="showContainer('home-container')">На главную</button>
+    </div>
+
+    <!-- Личный кабинет -->
+    <div id="profile-container" class="container">
+        <h2>Личный кабинет</h2>
+        
+        <div class="balance">
+            Доступно для вывода: <span id="profile-balance">0 ₽</span>
+        </div>
+        
+        <div class="stats">
+            <div class="stat-item">
+                <div>📊 Всего просмотров</div>
+                <div><strong id="total-views">0</strong></div>
+            </div>
+            <div class="stat-item">
+                <div>💸 Всего заработано</div>
+                <div><strong id="total-earned-profile">0 ₽</strong></div>
+            </div>
+        </div>
+        
+        <div id="payment-form">
+            <h3>Вывод средств</h3>
+            <select id="payment-method">
+                <option value="qiwi">QIWI Кошелек</option>
+                <option value="yoomoney">ЮMoney</option>
+                <option value="card">Банковская карта</option>
+            </select>
+            <input type="text" id="payment-details" placeholder="Номер кошелька/карты">
+            <button id="withdraw-btn">Вывести деньги</button>
+        </div>
+        
+        <button onclick="showContainer('home-container')">На главную</button>
+    </div>
+
+    <script>
+        // Данные пользователя
+        let userData = {
+            balance: 0,
+            todayEarned: 0,
+            totalEarned: 0,
+            totalViews: 0,
+            adHistory: [],
+            lastAdDate: null
+        };
+
+        // Рекламные ролики
+        const ads = [
+            {
+                title: "Новый смартфон VK Phone",
+                description: "Уникальный телефон с экосистемой VK!",
+                reward: 5
+            },
+            {
+                title: "Курсы VK Образование",
+                description: "Станьте программистом за 6 месяцев!",
+                reward: 7
+            },
+            {
+                title: "Музыка VK",
+                description: "Подписка за 1 рубль в первый месяц!",
+                reward: 4
+            }
+        ];
+
+        // Инициализация VK Ads
+        function initVKAds() {
+            // Баннер на главной
+            VK.Retargeting.Init("ВАШ_ID_РЕКЛАМНОГО_КАБИНЕТА");
+            VK.Retargeting.Hit();
+            
+            // Видеореклама
+            VK.init({
+                apiId: ВАШ_API_ID,  // Замените на ваш API ID из VK Dev
+                onlyWidgets: true
+            });
+        }
+
+        // Загрузка данных
+        function loadUserData() {
+            const savedData = localStorage.getItem('adUserData');
+            if (savedData) {
+                userData = JSON.parse(savedData);
+                
+                // Сброс дневного заработка, если день сменился
+                const today = new Date().toDateString();
+                if (userData.lastAdDate !== today) {
+                    userData.todayEarned = 0;
+                    userData.lastAdDate = today;
+                    saveUserData();
+                }
+            }
+            updateUI();
+        }
+
+        // Сохранение данных
+        function saveUserData() {
+            localStorage.setItem('adUserData', JSON.stringify(userData));
+        }
+
+        // Обновление интерфейса
+        function updateUI() {
+            // Форматирование чисел с разделителями
+            const formatMoney = (amount) => {
+                return amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ") + ' ₽';
+            };
+
+            document.getElementById('home-balance').textContent = formatMoney(userData.balance);
+            document.getElementById('today-earned').textContent = formatMoney(userData.todayEarned);
+            document.getElementById('total-earned').textContent = formatMoney(userData.totalEarned);
+            document.getElementById('ads-balance').textContent = formatMoney(userData.balance);
+            document.getElementById('profile-balance').textContent = formatMoney(userData.balance);
+            document.getElementById('total-views').textContent = userData.totalViews;
+            document.getElementById('total-earned-profile').textContent = formatMoney(userData.totalEarned);
+
+            // Обновление истории просмотров
+            const historyContainer = document.getElementById('ad-history');
+            historyContainer.innerHTML = '<h4>История просмотров:</h4>';
+            
+            if (userData.adHistory.length === 0) {
+                historyContainer.innerHTML += '<p>Вы еще не смотрели рекламу</p>';
+            } else {
+                userData.adHistory.slice().reverse().forEach(item => {
+                    const adItem = document.createElement('div');
+                    adItem.className = 'ad-item';
+                    adItem.innerHTML = `
+                        <strong>${item.title}</strong> - 
+                        <span style="color: green;">+${item.reward} ₽</span> - 
+                        <small>${new Date(item.date).toLocaleString()}</small>
+                    `;
+                    historyContainer.appendChild(adItem);
+                });
+            }
+        }
+
+        // Показ рекламы
+        function showAd() {
+            const adContainer = document.getElementById('ad-display');
+            const randomAd = ads[Math.floor(Math.random() * ads.length)];
+            
+            // В реальном проекте здесь должен быть код VK Video Ads
+            adContainer.innerHTML = `
+                <h3>${randomAd.title}</h3>
+                <p>${randomAd.description}</p>
+                <img src="https://via.placeholder.com/300x150?text=VK+Ads" style="max-width: 100%;">
+                <p>Просмотрите до конца для получения ${randomAd.reward} ₽</p>
+            `;
+            
+            return randomAd;
+        }
+
+        // Просмотр рекламы
+        document.getElementById('watch-ad-btn').addEventListener('click', function() {
+            const btn = this;
+            const progressBar = document.getElementById('progress-bar');
+            const rewardMessage = document.getElementById('reward-message');
+            
+            // Проверка времени между просмотрами
+            const now = new Date();
+            if (userData.lastAdTime && (now - new Date(userData.lastAdTime)) < 30000) {
+                alert('Подождите 30 секунд между просмотрами!');
+                return;
+            }
+            
+            btn.disabled = true;
+            const currentAd = showAd();
+            
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += 1;
+                progressBar.style.width = `${progress}%`;
+                
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    
+                    // Начисление вознаграждения
+                    const reward = currentAd.reward;
+                    userData.balance += reward;
+                    userData.todayEarned += reward;
+                    userData.totalEarned += reward;
+                    userData.totalViews += 1;
+                    userData.lastAdTime = new Date().toISOString();
+                    userData.adHistory.push({
+                        title: currentAd.title,
+                        reward: reward,
+                        date: new Date().toISOString()
+                    });
+                    
+                    saveUserData();
+                    updateUI();
+                    
+                    btn.disabled = false;
+                    rewardMessage.textContent = `+${reward} ₽! Новый баланс: ${userData.balance.toLocaleString()} ₽`;
+                    
+                    // Автоматическое обновление рекламы через 2 секунды
+                    setTimeout(() => {
+                        showAd();
+                        progressBar.style.width = '0%';
+                        rewardMessage.textContent = '';
+                    }, 2000);
+                }
+            }, 100); // 100ms * 100 = 10 секунд
+        });
+
+        // Вывод средств
+        document.getElementById('withdraw-btn').addEventListener('click', function() {
+            if (userData.balance < 50) {
+                alert("Минимальная сумма вывода - 50 ₽");
+                return;
+            }
+            
+            const method = document.getElementById('payment-method').value;
+            const details = document.getElementById('payment-details').value.trim();
+            
+            if (!details) {
+                alert("Пожалуйста, укажите реквизиты для вывода!");
+                return;
+            }
+            
+            if (confirm(`Подтвердить вывод ${userData.balance.toLocaleString()} ₽ на ${method} (${details})?`)) {
+                alert(`Заявка на вывод ${userData.balance.toLocaleString()} ₽ принята! Ожидайте поступления средств.`);
+                userData.balance = 0;
+                saveUserData();
+                updateUI();
+                document.getElementById('payment-details').value = '';
+            }
+        });
+
+        // Переключение между страницами
+        function showContainer(containerId) {
+            document.querySelectorAll('.container').forEach(container => {
+                container.style.display = 'none';
+            });
+            document.getElementById(containerId).style.display = 'block';
+            
+            if (containerId === 'ads-container') {
+                showAd();
+            }
+        }
+
+        // Инициализация при загрузке
+        window.addEventListener('DOMContentLoaded', () => {
+            initVKAds();
+            loadUserData();
+        });
+    </script>
+</body>
+</html>
